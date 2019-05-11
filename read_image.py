@@ -22,11 +22,11 @@ while(1):
     #print(str(w1)+" "+str(h1))
     #print("w1h1")
     hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
-    lower_red = np.array([105,40,40])
-    upper_red = np.array([125,255,255])
+    lower_red = np.array([100,20,20])
+    upper_red = np.array([115,255,255])
 
     mask = cv2.inRange(hsv,lower_red,upper_red)
-    cv2.imshow('im2',mask);
+    #cv2.imshow('im2',mask);
 
     kernelOpen=np.ones((7,7))
     kernelClose=np.ones((20,20))
@@ -35,21 +35,32 @@ while(1):
     maskClose=cv2.morphologyEx(maskOpen,cv2.MORPH_CLOSE,kernelClose)
 
     maskFinal=maskClose
-    cv2.imshow('im2',maskFinal);
+    #cv2.imshow('im2',maskFinal);
 
     cnts,hierarchy=cv2.findContours(maskFinal,cv2.RETR_TREE,cv2.CHAIN_APPROX_NONE)
 
-    max=0
+    max1=0
     d=0
+    rect=[]
 
     for c in range(0,len(cnts)-1):
-      if cv2.contourArea(cnts[c])>max:
-        max=cv2.contourArea(cnts[c])
+      if cv2.contourArea(cnts[c])>max1:
+        max1=cv2.contourArea(cnts[c])
         perimeter = cv2.arcLength(cnts[c],True)
         radius=perimeter/(2*3.14)
-        M = cv2.moments(cnts[c])
-        cX = int(M["m10"]/M["m00"])
-        cY = int(M["m01"]/M["m00"])
+        d=c;
+        maxp=perimeter
+
+
+    M = cv2.moments(cnts[d])
+    cX = int(M["m10"]/M["m00"])
+    cY = int(M["m01"]/M["m00"])
+    #approx = cv2.approxPolyDP(d, 0.02 * maxp, True)
+    (x, y, w, h)= cv2.boundingRect(cnts[d])
+    rect = (x, y, w, h)
+    cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 1);
+    cv2.putText(frame, "centroid", (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+    cv2.imshow('im2',frame);
     
 
     
@@ -57,26 +68,12 @@ while(1):
     print(str(cX)+" "+str(cY))
     print("D")
     res=np.ones((480,640,3))
-    res=cv2.resize(image4,(int(radius*0.5),int(radius*0.5)),interpolation=cv2.INTER_LINEAR)
-    w,h=res.shape[:2]
+    res=cv2.resize(image4,(w,h),interpolation=cv2.INTER_LINEAR)
+    
     #print(str(w)+" "+str(h))
     time.sleep(1)
-    #frame[cX-int(h/2):cX+int(h/2),cY-int(w/2):cY+int(w/2),:]=res[0:int(w),0:int(h),:]
-    #cv2.imshow('im2',frame);
-    
-
-    #M=np.float32([[1,0,cX-radius/2],[0,1,cY-radius/2]])
-    #dst=cv2.warpAffine(res,M,(int(radius),int(radius)))
-
-    #image5=cv2.add(frame+res)
-
-    
-    
-    
-    
-
-
-    #cv2.imshow('im2',res)
+    frame[y:y+h,x:x+w]=res
+    cv2.imshow('im2',frame);
 
     k=cv2.waitKey(1)&0xFF
     
